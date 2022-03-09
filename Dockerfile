@@ -24,6 +24,12 @@ RUN ${WD}/common/buildbro zeek ${VER} ${BUILD_TYPE}
 ADD ./common/getmmdb.sh /usr/local/getmmdb.sh
 ADD ./common/bro_profile.sh /usr/local/bro_profile.sh
 
+# Build kafka
+RUN apt-get install -y librdkafka-dev libpcap-dev git cmake python3-pip libssl-dev && \
+    pip3 install GitPython semantic-version 
+WORKDIR /usr/local/zeek-${VER}
+RUN LIBRDKAFKA_ROOT=/usr/lib ./bin/zkg install --force seisollc/zeek-kafka
+
 # Get geoip data
 FROM debian:bullseye as geogetter
 ARG MAXMIND_LICENSE_KEY
@@ -43,7 +49,7 @@ ARG ZEEK_VER=4.2.0
 ENV VER ${ZEEK_VER}
 #install runtime dependencies
 RUN apt-get update \
-    && apt-get -y install --no-install-recommends libpcap0.8 libssl1.1 libmaxminddb0 python3.9-minimal \
+    && apt-get -y install --no-install-recommends libpcap0.8 libssl1.1 libmaxminddb0 librdkafka++1 python3.9-minimal \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /usr/local/zeek-${VER} /usr/local/zeek-${VER}
